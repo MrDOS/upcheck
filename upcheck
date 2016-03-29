@@ -1,0 +1,94 @@
+#! /bin/bash
+
+DEFAULT_CONFIG=/etc/upcheck.conf
+
+config="$DEFAULT_CONFIG"
+if [ $# -gt 0 ]
+then
+    config="$1"
+fi
+
+if [ ! -r "$config" ]
+then
+    cat 1>&2 <<ERRMSG
+Configuration file $config doesn't exist or isn't readable.
+ERRMSG
+    exit 1
+fi
+
+source "$config"
+
+host_up ()
+{
+    host="$1"
+    ping -c 1 "$host" >/dev/null 2>&1
+}
+
+ssh_up ()
+{
+    host="$1"
+    nc -w 2 -z "$host" 22 >/dev/null
+}
+
+figlet -c -w `tput cols` "Upcheck"
+printf "Beginning checks at %s.\n\n" "`date "+%Y-%m-%d %H:%I:%S"`"
+start=`date +%s`
+
+for host in $hosts
+do
+    user_variable="$host"_user
+    services_variable="$host"_services
+    user="${!user_variable}"
+    services="${!services_variable}"
+
+    if [ -n "$user" ]
+    then
+        ssh_connect="$user"@"$host"
+    else
+        ssh_connect="$host"
+    fi
+
+    echo -e "\033[1m$host:\033[0m"
+
+    if host_up "$host"
+    then
+        echo -e "Host is \033[32mup\033[0m."
+    else
+        echo -e "Host is \033[31mdown\033[0m. Skipping further tests."
+        continue
+    fi
+
+    if ssh_up "$host"
+    then
+        echo -e "SSH is \033[32mup\033[0m."
+    else
+        echo -e "SSH is \033[31mdown\033[0m. Skipping further tests."
+        continue
+    fi
+
+    for service in $services
+    do
+        path_variable="$host"_"$service"
+        name_variable="$host"_"$service"_name
+        path="${!path_variable}"
+        name="${!name_variable}"
+
+        if [ -z "$name" ]
+        then
+            name="$service"
+        fi
+
+        if ssh "$ssh_connect" "pgrep -f $path >/dev/null"
+        then
+            echo -e "$name is \033[32mrunning\033[0m."
+        else
+            echo -e "$name is \033[31mnot running\033[0m."
+        fi
+    done
+
+    echo
+done
+
+end=`date +%s`
+duration=`expr $end - $start`
+printf "Finished at %s (%ss).\n" "`date "+%Y-%m-%d %H:%I:%S"`" $duration
