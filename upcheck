@@ -78,7 +78,7 @@ do
             name="$service"
         fi
 
-        if ssh "$ssh_connect" "pgrep -f $path >/dev/null"
+        if ssh "$ssh_connect" "pgrep -f $path" >/dev/null
         then
             echo -e "$name is \033[32mrunning\033[0m."
         else
