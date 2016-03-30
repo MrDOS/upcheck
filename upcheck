@@ -31,7 +31,7 @@ ssh_up ()
 }
 
 figlet -c -w `tput cols` "Upcheck"
-printf "Beginning checks at %s.\n\n" "`date "+%Y-%m-%d %H:%I:%S"`"
+printf "Beginning checks at %s.\n\n" "`date "+%Y-%m-%d %H:%M:%S"`"
 start=`date +%s`
 
 for host in $hosts
@@ -91,4 +91,4 @@ done
 
 end=`date +%s`
 duration=`expr $end - $start`
-printf "Finished at %s (%ss).\n" "`date "+%Y-%m-%d %H:%I:%S"`" $duration
+printf "Finished at %s (%ss).\n" "`date "+%Y-%m-%d %H:%M:%S"`" $duration
