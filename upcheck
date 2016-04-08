@@ -30,16 +30,23 @@ ssh_up ()
     nc -w 2 -z "$host" 22 >/dev/null
 }
 
-figlet -c -w `tput cols` "Upcheck"
-printf "Beginning checks at %s.\n\n" "`date "+%Y-%m-%d %H:%M:%S"`"
+figlet -c "Upcheck"
+printf "Beginning checks at %s.\n" "`date "+%Y-%m-%d %H:%M:%S"`"
 start=`date +%s`
 
-for host in $hosts
+for host_alias in $hosts
 do
-    user_variable="$host"_user
-    services_variable="$host"_services
+    host_variable="$host_alias"_host
+    user_variable="$host_alias"_user
+    services_variable="$host_alias"_services
+    host="${!host_variable}"
     user="${!user_variable}"
     services="${!services_variable}"
+
+    if [ -z "$host" ]
+    then
+        host="$host_alias"
+    fi
 
     if [ -n "$user" ]
     then
@@ -48,7 +55,8 @@ do
         ssh_connect="$host"
     fi
 
-    echo -e "\033[1m$host:\033[0m"
+    echo
+    echo -e "\033[1m$host_alias:\033[0m"
 
     if host_up "$host"
     then
@@ -68,8 +76,8 @@ do
 
     for service in $services
     do
-        path_variable="$host"_"$service"
-        name_variable="$host"_"$service"_name
+        path_variable="$host_alias"_"$service"
+        name_variable="$host_alias"_"$service"_name
         path="${!path_variable}"
         name="${!name_variable}"
 
@@ -85,10 +93,8 @@ do
             echo -e "$name is \033[31mnot running\033[0m."
         fi
     done
-
-    echo
 done
 
 end=`date +%s`
 duration=`expr $end - $start`
-printf "Finished at %s (%ss).\n" "`date "+%Y-%m-%d %H:%M:%S"`" $duration
+printf "\nFinished at %s (%ss).\n" "`date "+%Y-%m-%d %H:%M:%S"`" $duration
