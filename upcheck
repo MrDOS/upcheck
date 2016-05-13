@@ -81,9 +81,16 @@ do
         path="${!path_variable}"
         name="${!name_variable}"
 
+        # If a pretty name hasn't been given, use the service name.
         if [ -z "$name" ]
         then
             name="$service"
+        fi
+
+        # If a path hasn't been given, match against the service name.
+        if [ -z "$path" ]
+        then
+            path="$service"
         fi
 
         ssh "$ssh_connect" "pgrep -f $path" >/dev/null 2>&1
