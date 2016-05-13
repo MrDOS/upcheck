@@ -86,12 +86,20 @@ do
             name="$service"
         fi
 
-        if ssh "$ssh_connect" "pgrep -f $path" >/dev/null
-        then
-            echo -e "$name is \033[32mrunning\033[0m."
-        else
-            echo -e "$name is \033[31mnot running\033[0m."
-        fi
+        ssh "$ssh_connect" "pgrep -f $path" >/dev/null 2>&1
+        success=$?
+        case $success in
+        0)
+            echo -e "$name is \033[32mrunning\033[0m." ;;
+        1)
+            echo -e "$name is \033[31mnot running\033[0m." ;;
+        255)
+            echo -e "$name is \033[33minaccessible\033[0m" \
+                    "(SSH connection failure)." ;;
+        *)
+            echo -e "$name is \033[34muncheckable\033[0m" \
+                    "(unknown exit code: $success)." ;;
+        esac
     done
 done
 
