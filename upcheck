@@ -27,7 +27,7 @@ host_up ()
 ssh_up ()
 {
     host="$1"
-    nc -w 2 -z "$host" 22 >/dev/null
+    nc -w 2 -z "$host" 22 >/dev/null 2>&1
 }
 
 figlet -c "Upcheck"
